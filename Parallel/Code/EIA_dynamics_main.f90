@@ -13,6 +13,7 @@ use print_positions_module
 use kinetic_energy_module
 use print_data_module
 use send_rec_module
+use rows_per_proc_module
 
 implicit none
 character(25)                           :: fName, fff
@@ -26,7 +27,8 @@ real(8)                                 :: V, eps, sig, time, KE, Tinst
 real(8), allocatable, dimension(:)      :: total_momentum
 integer                                 :: seed, trjCount, thermCount
 integer                                 :: initUn, finUn, trajUn, dataUn, velUn, paramUn
-integer                                 :: ierror, i, rank, numProcs, status, numParts
+integer                                 :: ierror, rank, numProcs, status, numParts
+integer                                 :: myFirstPart, myLastPart
 integer, parameter                      :: rMaster = 0
 
 call mpi_init(ierror)
@@ -56,17 +58,18 @@ if (rank == rMaster) then
                 call exit()
         end if
 end if
-call mpi_bcast(dt, mpi_real8, rMaster, mpi_comm_world, ierror)
-call mpi_bcast(boxSize, mpi_real8, rMaster, mpi_comm_world, ierror)
-call mpi_bcast(cutOff, mpi_real8, rMaster, mpi_comm_world, ierror)
+call mpi_bcast(dt, 1, mpi_real8, rMaster, mpi_comm_world, ierror)
+call mpi_bcast(boxSize, 1, mpi_real8, rMaster, mpi_comm_world, ierror)
+call mpi_bcast(cutOff, 1, mpi_real8, rMaster, mpi_comm_world, ierror)
 call mpi_bcast(T, 1, mpi_real8, rMaster, mpi_comm_world, ierror)
 call mpi_bcast(eps, 1, mpi_real8, rMaster, mpi_comm_world, ierror)
 call mpi_bcast(sig, 1, mpi_real8, rMaster, mpi_comm_world, ierror)
 call mpi_bcast(nPart, 1, mpi_integer, rMaster, mpi_comm_world, ierror)
-call mpi_bcast(nStep, 1, mpi_integer, rMaster, mpi_comm_world, ierror)
+call mpi_bcast(nSteps, 1, mpi_integer, rMaster, mpi_comm_world, ierror)
 call mpi_bcast(seed, 1, mpi_integer, rMaster, mpi_comm_world, ierror)
 seed = seed + rank
 
+call rows_per_proc(nPart, myFirstPart, myLastPart)
 allocate(pos(nPart,3), F(nPart,3), vel(nPart,3), total_momentum(3))
 
 if (rank == rMaster) then
