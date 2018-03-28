@@ -1,21 +1,25 @@
 module kinetic_energy_module
+use mpi
 contains
-subroutine kinetic_energy(vel, KE, Tinst, nPart)
+subroutine kinetic_energy(vel, KETotal, myFirstPart, myLastPart, nPart)
 implicit none
-integer, intent(in)                             :: nPart
+integer, intent(in)                             :: nPart, myFirstPart, myLastPart
 real(8), dimension(nPart,3), intent(in)         :: vel
-real(8), intent(out)                            :: KE, Tinst
+real(8), intent(out)                            :: KETotal
 real(8), dimension(3)                           :: vec
-real(8)                                         :: modV
-integer                                         :: i
+real(8)                                         :: modV, KE
+integer                                         :: i, ierror
+integer, parameter                              :: rMaster = 0
 
 KE = 0.0D0
-do i = 1, nPart, 1
+do i = myFirstPart, myLastPart, 1
         vec(:) = vel(i,:)
         modV = dsqrt(dot_product(vec, vec))
         KE = KE + modV**2.
 end do
-KE = KE/2.0
-Tinst = 2.0*KE/(3.0*float(nPart))
+
+
+call mpi_reduce(KE, KETotal, 1, MPI_real8, MPI_SUM, rMaster, mpi_comm_world, ierror)
+
 end subroutine kinetic_energy
 end module kinetic_energy_module
