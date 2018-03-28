@@ -1,31 +1,40 @@
 !::::::::::::::::::::::::
 ! MADE BY GENIS LLEOPART
+! PARALLEL VERSION BY ADRIÀ VICENS
 !::::::::::::::::::::::::
 
 ! Contains the subroutine momentum, which calculate
 ! the total intertial momentum of our system
 
 ! Variables IN:
-!   N 	--> Number of particles | INTEGER
 !   vel --> Velocities of the particles | DIMENSION(N,3), REAL(8)
+!   myFirstPart --> Index of the first particle | integer
+!   myLastPart --> Index of the first particle | integer
+!   partialMomentum --> partial momentum of each processor | DIMENSION(3), REAL(8)
 
 ! Variables OUT:
-!   P_total --> Total momentum | DIMENSION(3), REAL(8)
+!   totalMomentum --> total momentum | DIMENSION(3), REAL(8)
 module moment_module
+use mpi
 implicit none
 contains
 
-subroutine momentum(N,vel,P_total)
+subroutine momentum(myFirstPart, myLastPart, vel, totalMomentum)
 implicit none
-INTEGER, INTENT(IN) :: N
-REAL(8), DIMENSION(N,3), INTENT(IN) :: vel
-REAL(8), DIMENSION(3), INTENT(OUT) :: P_total
-INTEGER :: i
+real(8), dimension(:,:), intent(in) :: vel
+real(8), dimension(3), intent(out) :: totalMomentum
+integer, intent(in) :: myFirstPart, myLastPart
+real(8), dimension(3) :: partialMomentum
+integer :: ierror, i
+integer, parameter :: rMaster = 0
 
-P_total = 0.0D0
-Do i = 1,N,1
-  P_total(:) = P_total(:) + vel(i,:)
-end do
+partialMomentum = 0.0d0
+
+totalMomentum = 0.0d0
+partialMomentum = sum(vel(myFirstPart:myLastPart, :), dim = 1)
+
+call mpi_barrier( mpi_comm_world, ierror)
+call mpi_reduce(partialMomentum, totalMomentum, 3, mpi_real8, mpi_sum, rMaster, mpi_comm_world, ierror)
 
 end subroutine momentum
 
