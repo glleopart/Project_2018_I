@@ -1,4 +1,4 @@
-module send_rec_module
+module send_recv_module
 use mpi
 implicit none
 contains
@@ -34,7 +34,7 @@ if (rank == rMaster) then
                 end if
                 nDats = 3*(procLastRow - procFirstRow + 1)
                 call mpi_recv(&
-                & full_dats(procFirstRow:procLastRow,:),      &
+                & full_dats(procFirstRow:procLastRow,:),        &
                 & nDats,                                        &
                 & mpi_real8,                                    &
                 & i,                                            &
@@ -60,5 +60,5 @@ else if (rank /= rMaster) then
 
 end if
 end subroutine send_recv_array
-end module send_rec_module
+end module send_recv_module
 

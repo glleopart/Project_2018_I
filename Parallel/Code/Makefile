@@ -4,7 +4,7 @@ dir_name= test_run
 new_dir = $(path)$(dir_name)
 num_procs = 2
 all_exec = compile-main compile-MB compile-rdf
-to_compile = compile-pbc compile-lj compile-mom compile-init_pos compile-init_vel compile-thermo compile-verlet compile-pos compile-KE compile-read_data compile-print_data compile-distort compile-send_array
+to_compile = compile-rows_per_proc compile-send_array compile-pbc compile-lj compile-mom compile-init_pos compile-init_vel compile-thermo compile-verlet compile-pos compile-KE compile-read_data compile-print_data compile-distort 
 .PHONY: clean backup run-main run-MB run-rdf variables module-load
 
 compile-all: module-load $(all_exec) 
@@ -14,11 +14,13 @@ module-load:
 
 compile-main: EIA_dynamics_main.f90 $(to_compile)
 	mpif90 -g -o 	dynamics_mpi \
+			send_recv_module.o \
 			pbc_module.o \
 			distort_module.o \
 		       	lj_module.o \
 			moment_module.o \
 			position_module.o \
+			rows_per_proc_module.o \
 			velocities_module.o \
 			andersen_therm_module.o \
 			vel_verlet_module.o \
@@ -73,8 +75,8 @@ compile-print_data: print_data_module.f90
 compile-distort: distort_module.f90
 	mpif90 -g -c 	distort_module.f90
 
-compile-send_array: send_rec_module.f90
-	mpif90 -g -c 	send_rec_module.f90
+compile-send_array: send_recv_module.f90
+	mpif90 -g -c 	send_recv_module.f90
 
 compile-rows_per_proc: rows_per_proc_module.f90
 	mpif90 -g -c 	rows_per_proc_module.f90
