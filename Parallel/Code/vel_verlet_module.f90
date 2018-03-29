@@ -1,4 +1,4 @@
-module mpi_verlet_module
+module vel_verlet_module
 use mpi
 use lj_module
 use pbc_module
@@ -15,7 +15,7 @@ contains
     real(8),intent(in)           :: dt, eps,sig,boxsize,cutOff
     real(8),allocatable          :: full_dats
         if ((time == 0).and.(rank == rmaster)) then 
-            call LJ_pot(nPart, pos, eps, sig, boxSize, cutOff,F_aux, V)
+            call LJ_pot(nPart, myFirstPart, myLastPart, pos, eps, sig, boxSize, cutOff,F_aux, V)
         endif
         if (time == 0) then
             do i = myFirstPart , myLastPart, 1
@@ -26,14 +26,15 @@ contains
         endif
         if ((time /= 0).and.(rank == rmaster)) then
             F_aux(:,:) = F(:,:)
-            call LJ_pot(nPart, pos, eps, sig, boxSize, cutOff,F, V)
+            call LJ_pot(nPart, myFirstPart, myLastPart, pos, eps, sig, boxSize, cutOff,F, V)
         endif
         if (time/=0) then 
             do i = myFirstPart,myLastPart, 1
                 vel(i,:) = vel(i,:)*dt +(F_aux(i,:)+ F(i,:))*dt/2.
             end do
         endif
-        call send_recv_array(F,myFirstPart,myLastPart,rank,nRow,status,full_dats) 
+        call send_recv_array(vel(myFirstPart:myLastPart,:),myFirstPart,myLastPart,rank,nRow,status,vel) 
+        call send_recv_array(pos(myFirstPart:myLastPart,:),myFirstPart,myLastPart,rank,nRow,status,pos) 
         
             
         
