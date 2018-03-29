@@ -35,7 +35,8 @@ call mpi_init(ierror)
 call mpi_comm_rank(mpi_comm_world, rank, ierror)
 call mpi_comm_size(mpi_comm_world, numProcs, ierror)
 
-if (rank == rMaster) then 
+if (rank == rMaster) then
+	print * , "Hola començo a fer coses amics, sóc el master!" 
         call cpu_time(start)
         call get_command_argument(1, fName, status=fStat)
         if (fStat /= 0) then
@@ -43,6 +44,7 @@ if (rank == rMaster) then
                 call mpi_finalize(ierror)
                 call exit()
         end if 
+	print * , "L'arxiu existeix i el trobo."
         un = 100
         open(unit=un, file=trim(fName), status='old') 
     
@@ -57,7 +59,10 @@ if (rank == rMaster) then
                 call mpi_finalize(ierror)
                 call exit()
         end if
+print *, "He llegit la data i comença el BCAST!"
 end if
+
+
 call mpi_bcast(dt, 1, mpi_real8, rMaster, mpi_comm_world, ierror)
 call mpi_bcast(boxSize, 1, mpi_real8, rMaster, mpi_comm_world, ierror)
 call mpi_bcast(cutOff, 1, mpi_real8, rMaster, mpi_comm_world, ierror)
@@ -68,20 +73,24 @@ call mpi_bcast(nPart, 1, mpi_integer, rMaster, mpi_comm_world, ierror)
 call mpi_bcast(nSteps, 1, mpi_integer, rMaster, mpi_comm_world, ierror)
 call mpi_bcast(seed, 1, mpi_integer, rMaster, mpi_comm_world, ierror)
 seed = seed + rank
+call srand(seed)
 
 call rows_per_proc(nPart, myFirstPart, myLastPart)
+print *, "Sóc el", rank, "Aquesta és la meva primera partícula", myFirstPart
 allocate(pos(nPart,3), F(nPart,3), vel(nPart,3), total_momentum(3))
 
 if (rank == rMaster) then
+	print *, "Hola sóc el master vaig a inicialitzar les condicions inicials"
         ! Generar la posició inicial de totes les partícules conforme a un cristall 
         ! d'una cel·la Simple Cubic. I distorsiona les posicions inicials per tal de que
         ! no tingui tanta energia reticular.
         call SC_init_conditions(nPart, pos, boxSize)
+        print * , "He fet el SC_init"
         call distort_geometry(nPart, pos, boxSize, seed)
-
+        print *, "He fet la distort_geom"
         ! Genera una distribució de velocitats gaussiana amb l'algoritme de Box_Muller
         call IN_velocities(nPart, T, seed, vel)
-    
+        print *, "He fet el IN_vel"
         ! Obre els arxius on s'imprimiran els resultats de la simulació
         initUn = 101; finUn = 102; trajUn = 103; dataUn = 104; velUn = 105; paramUn = 106
         open(unit=initUn, file='initial.out')           ! Coord. Inicials
@@ -91,12 +100,16 @@ if (rank == rMaster) then
         open(unit=velUn,  file='velocity.out')          ! T, Ken, V, temps...
         open(unit=paramUn,file='parameters.out')        ! Parameters needed for statistics
                                                 ! (MB and RDF)
+        print *, "Tots els arxius oberts baby."
         write(paramUn,*) nSteps/100 - 1, nPart
+        print *, "first write in Parameters"
         write(paramUn,*) boxSize
+        print *, "second write in Parameters tolai."
 end if
-
+print *, "TOTS ANEM A FER BCAST DE POS I VEL.", rank
 call mpi_bcast(pos, 3*nPart, mpi_real8, rMaster, mpi_comm_world, ierror)
 call mpi_bcast(vel, 3*nPart, mpi_real8, rMaster, mpi_comm_world, ierror)
+print *, "Hola sóc el", rank, "El BCAST esta fet."
 
 if (rank == rMaster) then
         call print_positions(initUn, nPart, pos, time)
@@ -108,9 +121,12 @@ time = 0.0D0; trjCount = 0; thermCount = 0
 do i = 1, nSteps, 1
         call vel_verlet(time, dt, pos, vel, nPart, eps, sig, boxSize, cutOff, V, F, myFirstPart, myLastPart&
                         &, rank, status)
+        print *, "He fet verlet", rank
         if (mod(trjCount,100) == 0) then
-                call kinetic_energy(vel, KE, Tinst, myFirstPart, myLastPart, nPart, rank)
                 call momentum(myFirstPart, myLastPart, vel, total_momentum)
+                print *, "He fet momentum", rank
+                call kinetic_energy(vel, KE, Tinst, myFirstPart, myLastPart, nPart, rank)
+                print *, "He fet kinetic_energy", rank
                 if (rank == rMaster) then
                         call print_positions(trajUn, nPart, pos, time)
                         call print_positions(velUn,  nPart, vel, time)
@@ -119,11 +135,17 @@ do i = 1, nSteps, 1
                 trjCount = 0
         end if
         if (mod(thermCount,10) == 0) then
-                call andersen_thermo(dt, T, nPart, i, vel)
-                thermCount = 0
+                !call andersen_thermo(dt, T, nPart, i, vel)
+        !        call andersen_thermo(dt, T, nPart, seed, vel, myFirstPart, myLastPart, rank, status)
+        !       thermCount = 0
         end if
+        print *, "He fet el termostat"
         trjCount = trjCount + 1
         thermCount = thermCount + 1
+        if (rank.eq.rMaster) then
+                print *, "Hola sóc el Master i estic al final del bucle" , i
+                print *, pos(1,:)
+        endif
 end do
 if (rank == rMaster) then
         call print_positions(finUn, nPart, pos, time)
@@ -131,6 +153,8 @@ if (rank == rMaster) then
         write(dataUn,*) "# CPU TIME: ", finish - start
         close(un); close(initUn); close(finUn); close(trajUn); close(dataUn)
 end if
+
+call mpi_finalize(ierror)
 contains
 
 end program dynamics

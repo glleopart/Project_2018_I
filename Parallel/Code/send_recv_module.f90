@@ -59,6 +59,8 @@ else if (rank /= rMaster) then
         &)
 
 end if
+call mpi_bcast(full_dats, 3*nRow, mpi_real8, rMaster, mpi_comm_world, ierror)
+
 end subroutine send_recv_array
 end module send_recv_module
 

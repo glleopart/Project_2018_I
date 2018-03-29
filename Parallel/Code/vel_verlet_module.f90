@@ -20,25 +20,20 @@ real(8), dimension(3)                                           :: vec
 integer                                                         :: i, j, k, ierror
 integer, parameter                                              :: rMaster = 0
 
-if ((time == 0).and.(rank == rmaster)) then 
-        call LJ_pot(nPart, myFirstPart, myLastPart, pos, eps, sig, boxSize, cutOff, F_aux, V)
-endif
-if (time == 0) then
-        do i = myFirstPart, myLastPart, 1
-                vec(:) = pos(i,:) + vel(i,:)*dt + F_aux(i,:)*dt**3./2.
-                call pbc(vec,boxsize)
-                pos(i,:) = vec(:)
-        end do
-endif
-if ((time /= 0).and.(rank == rmaster)) then
-        F_aux(:,:) = F(:,:)
-        call LJ_pot(nPart, myFirstPart, myLastPart, pos, eps, sig, boxSize, cutOff,F, V)
-endif
-if (time/=0) then 
-        do i = myFirstPart,myLastPart, 1
-                vel(i,:) = vel(i,:)*dt +(F_aux(i,:)+ F(i,:))*dt/2.
-        end do
-endif
+if (time == 0) call LJ_pot(nPart, myFirstPart, myLastPart, pos, eps, sig, boxSize, cutOff, F_aux, V)
+if (time /= 0) F_aux(:,:) = F(:,:)
+time = time + dt
+
+do i = myFirstPart, myLastPart, 1
+        vec(:) = pos(i,:) + vel(i,:)*dt + F_aux(i,:)*dt**3./2.
+        call pbc(vec,boxSize)
+        pos(i,:) = vec(:)
+end do
+
+call LJ_pot(nPart, myFirstPart, myLastPart, pos, eps, sig, boxSize, cutOff,F, V)
+do i = myFirstPart,myLastPart, 1
+        vel(i,:) = vel(i,:) +(F_aux(i,:)+ F(i,:))*dt/2.
+end do
 call send_recv_array(vel(myFirstPart:myLastPart,:),myFirstPart,myLastPart,rank,nPart,status,vel) 
 call send_recv_array(pos(myFirstPart:myLastPart,:),myFirstPart,myLastPart,rank,nPart,status,pos) 
 
