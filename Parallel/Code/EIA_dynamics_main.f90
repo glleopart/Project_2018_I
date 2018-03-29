@@ -12,7 +12,7 @@ use read_data_module
 use print_positions_module
 use kinetic_energy_module
 use print_data_module
-use send_rec_module
+use send_recv_module
 use rows_per_proc_module
 
 implicit none
@@ -106,10 +106,11 @@ end if
 
 time = 0.0D0; trjCount = 0; thermCount = 0
 do i = 1, nSteps, 1
-        call velocity_verlet(time, dt, pos, vel, nPart, eps, sig, boxSize, cutOff, V, F)
+        call vel_verlet(time, dt, pos, vel, nPart, eps, sig, boxSize, cutOff, V, F, myFirstPart, myLastPart&
+                        &, rank, status)
         if (mod(trjCount,100) == 0) then
-                call kinetic_energy(vel, KETotal, Tinst, myFirstPart, myLastPart, nPart, rank)
-                call momentum(nPart, vel, total_momentum)
+                call kinetic_energy(vel, KE, Tinst, myFirstPart, myLastPart, nPart, rank)
+                call momentum(myFirstPart, myLastPart, vel, total_momentum)
                 if (rank == rMaster) then
                         call print_positions(trajUn, nPart, pos, time)
                         call print_positions(velUn,  nPart, vel, time)

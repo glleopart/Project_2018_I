@@ -1,11 +1,11 @@
 module rows_per_proc_module
 use mpi
 implicit none
-
+contains
 subroutine rows_per_proc(nPart,myFirstPart,myLastPart)
 implicit none
-integer, intent(IN)                       :: nPart
-integer, intent(OUT)                      :: myFirstPart, myLastPart
+integer, intent(in)                       :: nPart
+integer, intent(out)                      :: myFirstPart, myLastPart
 integer                                   :: numPart, rank, numProcs, ierror
 
 call mpi_comm_rank(mpi_comm_world, rank, ierror)
