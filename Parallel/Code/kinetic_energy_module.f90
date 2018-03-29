@@ -1,9 +1,9 @@
 module kinetic_energy_module
 use mpi
 contains
-subroutine kinetic_energy(vel, KETotal, Tinst, myFirstPart, myLastPart, nPart)
+subroutine kinetic_energy(vel, KETotal, Tinst, myFirstPart, myLastPart, nPart, rank)
 implicit none
-integer, intent(in)                             :: nPart, myFirstPart, myLastPart
+integer, intent(in)                             :: nPart, myFirstPart, myLastPart, rank
 real(8), dimension(nPart,3), intent(in)         :: vel
 real(8), intent(out)                            :: KETotal, Tinst
 real(8), dimension(3)                           :: vec
@@ -20,8 +20,10 @@ end do
 
 
 call mpi_reduce(KE, KETotal, 1, MPI_real8, MPI_SUM, rMaster, mpi_comm_world, ierror)
-KETotal = KETotal*0.5
-Tinst = 2.0*KETotal/(3.0*float(nPart))
+if (rank == rMaster) then
+        KETotal = KETotal*0.5
+        Tinst = 2.0*KETotal/(3.0*float(nPart))
+end if
 
 
 end subroutine kinetic_energy

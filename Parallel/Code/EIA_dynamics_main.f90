@@ -108,7 +108,7 @@ time = 0.0D0; trjCount = 0; thermCount = 0
 do i = 1, nSteps, 1
         call velocity_verlet(time, dt, pos, vel, nPart, eps, sig, boxSize, cutOff, V, F)
         if (mod(trjCount,100) == 0) then
-                call kinetic_energy(vel, KE, Tinst, nPart)
+                call kinetic_energy(vel, KETotal, Tinst, myFirstPart, myLastPart, nPart, rank)
                 call momentum(nPart, vel, total_momentum)
                 if (rank == rMaster) then
                         call print_positions(trajUn, nPart, pos, time)
