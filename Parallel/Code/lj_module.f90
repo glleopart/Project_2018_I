@@ -49,13 +49,13 @@ do i = myFirstPart, myLastPart, 1; do j = i + 1, nPart, 1
         rij = dsqrt(dot_product(dist,dist))
         if (rij < cutOff) then
                 dist(:) = dist(:)/rij
-                vPartial  = vPpartial + 4.*eps*((sig/rij)**12. - (sig/rij)**6.)
+                vPartial  = vPartial + 4.*eps*((sig/rij)**12. - (sig/rij)**6.)
                 dV = 4*eps*(12.*sig**12./rij**13. - 6.*sig**6./rij**7)
                 F(i,:) = F(i,:) + dV*dist(:)
         end if
 end do; end do
 
-call mpi_reduce(V_partial, V, 1, mpi_real8, mpi_sum, rMaster, mpi_comm_world, ierror)
+call mpi_reduce(vPartial, V, 1, mpi_real8, mpi_sum, rMaster, mpi_comm_world, ierror)
 
 end subroutine LJ_pot
 end module lj_module

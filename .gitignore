@@ -2,6 +2,6 @@
 *.o
 *.xyz
 *.out
-check_MB
-rdf
-dynamics
+Parallel/Code/check_MB
+Parallel/Code/dynamics
+Parallel/Code/rdf
