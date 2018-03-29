@@ -43,7 +43,8 @@ integer, parameter                                          :: rMaster = 0
 vPartial = 0.
 V = 0.
 F(:,:) = 0.
-do i = myFirstPart, myLastPart, 1; do j = i + 1, nPart, 1
+do i = myFirstPart, myLastPart, 1; do j = 1, nPart, 1
+        if (i == j) cycle ! FOR THE WIN
         dist(:) = pos(i,:) - pos(j,:)
         call pbc(dist, boxSize)
         rij = dsqrt(dot_product(dist,dist))
@@ -55,7 +56,8 @@ do i = myFirstPart, myLastPart, 1; do j = i + 1, nPart, 1
         end if
 end do; end do
 
-call mpi_reduce(vPartial, V, 1, mpi_real8, mpi_sum, rMaster, mpi_comm_world, ierror)
-
+call mpi_allreduce(vPartial, V, 1, mpi_real8, mpi_sum, mpi_comm_world, ierror)
+ 
 end subroutine LJ_pot
+
 end module lj_module

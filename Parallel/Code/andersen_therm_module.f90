@@ -1,15 +1,18 @@
 module andersen_therm_module
+use mpi
+use send_recv_module
 contains
-subroutine andersen_thermo(dt, T, nPart, seed, vel)
+subroutine andersen_thermo(dt, T, nPart, seed, vel, myFirstPart, myLastPart, rank, status)
 implicit none
-integer, intent(in)                             :: nPart, seed
+integer, intent(in)                             :: nPart, seed, myFirstPart, myLastPart
+integer, intent(in)                             :: rank, status
 real(8), intent(in)                             :: dt, T
 real(8), dimension(nPart,3), intent(inout)      :: vel
 real(8)                                         :: x1, x2, y1, y2, w
 integer                                         :: i, j, k
 
-call srand(seed)
-do i = 1, nPart, 1
+!call srand(seed)
+do i = myFirstPart, myLastPart, 1
         if (rand() < 0.1) then
                 ! canvia la velocitat d'aquesta particula segons una distribució
                 ! gaussiana com maxwell boltzman.
@@ -39,5 +42,6 @@ do i = 1, nPart, 1
                 vel(i,3) = y1*dsqrt(T)
         end if
 end do
+call send_recv_array(vel(myFirstPart:myLastPart,:),myFirstPart,myLastPart,rank,nPart,status,vel)
 end subroutine andersen_thermo
 end module andersen_therm_module
