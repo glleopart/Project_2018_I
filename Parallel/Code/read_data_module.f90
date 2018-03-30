@@ -20,6 +20,10 @@ read(un,*) seed                 ! llavor per la generació de numeros aleatoris.
 close(un)
 ! D = N/V --> V = N/D --> L = (N/D)**(1/3)
 boxSize = nPartDim/(density)**(1./3.)
+
+cutOff = boxSize/3.0D0
+
+
 end subroutine readData
 
 end module read_data_module

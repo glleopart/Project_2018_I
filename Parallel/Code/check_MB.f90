@@ -1,4 +1,6 @@
 program check_MB
+use mpi
+use rows_per_proc_module
 implicit none
 character(25)                           :: fName
 character(5)                            :: trash
@@ -6,40 +8,57 @@ integer                                 :: fStat, un, unOut, paramUn
 integer                                 :: nPart, nIt, nHist
 integer                                 :: i, j, k, l
 real(8), allocatable, dimension(:,:)    :: vel
-real(8), allocatable, dimension(:)      :: histogram
+real(8), allocatable, dimension(:)      :: histogram, masterHistogram
 real(8), dimension(3)                   :: vec
 real(8)                                 :: iniHist, finHist, pasH, modV
 real(8)                                 :: minVel, minVel2
+!Variables MPI
+integer                                 :: ierror, rank, numProcs, status, numParts, myFirstPart, myLastPart
+integer, parameter                      :: rMaster = 0
 
-call get_command_argument(1, fName, status=fStat)
-if (fStat /= 0) then
-        print*, 'Any file given ---> Exitting program'
-        call exit()
+call mpi_init(ierror)
+call mpi_comm_rank(mpi_comm_world, rank, ierror)
+call mpi_comm_size(mpi_comm_world, numProcs, ierror)
+
+if (rank == rMaster) then
+        call get_command_argument(1, fName, status=fStat)
+        if (fStat /= 0) then
+                print*, 'Any file given ---> Exitting program'
+                call mpi_finalize(ierror)
+                call exit()
+        end if
+        un = 100; unOut = 101
+        open(unit=un, file=trim(fName), status='old')
+
+        call get_command_argument(2, fName, status=fStat)
+        if (fStat /= 0) then
+                print*, 'Any file given ---> Exitting program'
+                call mpi_finalize(ierror)
+                call exit()
+        end if
+        open(unit=paramUn, file=trim(fName), status='old')
+        read(paramUn,*) nIt, nPart
+
 end if
-un = 100; unOut = 101
+
+
 iniHist = -15.0D0; finHist = 15.0D0; nHist = 3000
 pasH = (finHist - iniHist)/dfloat(nHist)
+call mpi_bcast(nIt, 1, mpi_integer, rMaster, mpi_comm_world, ierror)
+call mpi_bcast(nPart, 1, mpi_integer, rMaster, mpi_comm_world, ierror)
+allocate(vel(nPart,3), histogram(nHist + 2), masterHistogram(nHist + 2))
 
-open(unit=un, file=trim(fName), status='old')
-
-call get_command_argument(2, fName, status=fStat)
-if (fStat /= 0) then
-        print*, 'Any file given ---> Exitting program'
-        call exit()
-end if
-open(unit=paramUn, file=trim(fName), status='old')
-read(paramUn,*) nIt, nPart
-allocate(vel(nPart,3), histogram(nHist + 2))
-
+call rows_per_proc(nPart, myFirstPart, myLastPart)
 
 histogram(:) = 0
+masterHistogram(:) = 0
 do i = 1, nIt, 1
         read(un,*) nPart
         read(un,*) trash
         do j = 1, nPart, 1
                 read(un,*) trash, vel(j,:)
         end do
-        do k = 1, nPart, 1; do l = 1, 3, 1
+        do k = myFirstPart, myLastPart, 1; do l = 1, 3, 1
                 vec(:) = vel(k,:)
                 !modV = dsqrt(dot_product(vec,vec))
 
@@ -60,16 +79,20 @@ do i = 1, nIt, 1
                 end if
         end do; end do
 end do
-! NORMALITZACIÓ
-histogram(:) = histogram(:)/sum(3*histogram(:)*pasH)
 
-open(unit=unOut, file='MB_velocityDistribution.out')
-do i = 1, nHist + 2, 1
-        write(unOut,*) iniHist + (i-1)*pasH, histogram(i)
-end do
-close(un); close(unOut); close(paramUn)
+call mpi_reduce(histogram, masterHistogram, (nPart + 2), mpi_real8, mpi_sum, rMaster, mpi_comm_world, ierror)
 
+if (rank == rMaster) then
+        ! NORMALITZACIÓ
+        masterHistogram(:) = masterHistogram(:)/sum(3*masterHistogram(:)*pasH)
 
-contains
+        open(unit=unOut, file='MB_velocityDistribution.out')
+        do i = 1, nHist + 2, 1
+                write(unOut,*) iniHist + (i-1)*pasH, histogram(i)
+        end do
+        close(un); close(unOut); close(paramUn)
+end if
+
+call mpi_finalize(ierror)
 
 end program check_MB

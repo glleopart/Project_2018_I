@@ -1,0 +1,43 @@
+README PARALLEL VERSION
+
+MAKEFILE:
+
+Type "make" to compile everything
+Type "make run-main" to run the MD simulation in ../test_dir and 2 threads by default. 
+	To change default values: "make run-main num_procs=# dir_name='your/dir/'"
+Type "make run-rdf" to run the RDF computation program.
+Type "make run-MB" to perform the checking the velocity distribution
+	(This two commands must be executed AFTER running MD.
+	But the Makefile already have this feature into account.
+	Default options for "run-main" apply to "make run-rdf" and "make run-MB" too)
+Type "make clean" to remove *.o, *.mod, *.xyz, *.out and the exec files.
+Type "make backup" to create a backup directory with the *.f90 files.
+Type "make help" to show the aviable options.
+
+
+MD: 
+
+The input file must contain this parameters in the same order.
+
+dt              (seconds)
+density         (sigma's)
+cutOff          (pm --> corresponds to 2.5 times sigma)
+nPartDim        (Adimensional)
+T*              (T*Kb/eps)
+eps             (Epsilon/Kb)
+sig             (pm)
+nSteps          (Adimensional)
+seed            (Adimensional)
+
+In order to run explicitly the MD without using the Makefile it should be done as follows:
+mpirun -np # dynamics_mpi input.dat
+
+Be aware to have the module loaded!!!! It only works with gcc compilers, 
+because the intel compilers do not have the built in rand() function.
+
+PLOTS:
+
+The *.gp scripts can be found in the Plots/ directory. To execute them, copy the desired script to the
+holding MD directory. The exectue as: "gnuplot <script_name.gp>".
+
+

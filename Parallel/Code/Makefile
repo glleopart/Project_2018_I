@@ -30,16 +30,18 @@ compile-main: EIA_dynamics_main.f90 $(to_compile)
 			print_data_module.o \
 			EIA_dynamics_main.f90
 			
-compile-MB: check_MB.f90
+compile-MB: compile-rows_per_proc check_MB.f90
 	mpif90 -g -o 	check_MB_mpi \
+			rows_per_proc_module.o \
 			check_MB.f90
 
-compile-rdf: rdf.f90
+compile-rdf: compile-rows_per_proc rdf.f90 
 	mpif90 -g -o 	rdf_mpi \
+			rows_per_proc_module.o \
 			rdf.f90 \
 			pbc_module.f90
 
-compile-pbc: pbc_module.f90
+compile-pbc: pbc_module.f90 
 	mpif90 -g -c 	pbc_module.f90
 
 compile-lj: lj_module.f90
@@ -109,7 +111,7 @@ run-main: compile-main
 
 run-MB: compile-MB
 	@if [ -d $(new_dir) ]; then \
-		cp ./check_MB $(new_dir); \
+		cp ./check_MB_mpi $(new_dir); \
 		cd $(new_dir); \
 		mpirun -np $(num_procs) check_MB_mpi velocity.out parameters.out
 	else \
@@ -119,7 +121,7 @@ run-MB: compile-MB
 
 run-rdf: compile-rdf
 	@if [ -d $(new_dir) ]; then \
-		cp ./rdf $(new_dir); \
+		cp ./rdf_mpi $(new_dir); \
 		cd $(new_dir); \
 		mpirun -np $(num_procs) rdf_mpi traj.xyz parameters.out; \
 	else \
@@ -127,8 +129,24 @@ run-rdf: compile-rdf
 		echo 'PLEASE TARGET A VALID ONE'; \
 	fi
 
-variables: 
+help: 
 	@echo '-------------------------------------------------'
+	@echo Type "make" to compile everything
+	@echo Type "make run-main" to run the MD simulation in ../test_dir and 2 threads by default.
+	@echo '        'To change default values: "make run-main num_procs=# dir_name='your/dir/'"
+	@echo Type "make run-rdf" to run the RDF computation program.
+	@echo Type "make run-MB" to perform the checking the velocity distribution.
+	@echo '        '\(This two commands must be executed AFTER running MD.
+	@echo '        'But the Makefile already have this feature into account.
+	@echo '        'Default options for "run-main" apply to "make run-rdf" and "make run-MB" too.\)
+	@echo Type "make clean" to remove *.o, *.mod, *.xyz, *.out and the exec files.
+	@echo Type "make backup" to create a backup directory with the *.f90 files.
+	@echo Type "make help" to show the aviable options.
+	@echo 
+	@echo 
+	@echo 
+	@echo Default options to the "run" commands. 
+	@echo 
 	@echo 
 	@echo "'dir_name' default is "$(dir_name)
 	@echo 
