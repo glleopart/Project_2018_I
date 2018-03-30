@@ -109,6 +109,20 @@ run-main: compile-main
 		echo 'PLEASE CHOOSE AN OTHER NAME' ; \
 	fi 
 
+run-main-bsc: compile-main
+	@if [ ! -d $(new_dir) ]; then \
+                mkdir $(new_dir); \
+                cp ./input.dat $(new_dir); \
+                cp ./dynamics_mpi $(new_dir); \
+		cp ./sub_bsc.sh $(new_dir); \
+                cd $(new_dir); \
+                bsub sub_bsc.sh $(num_procs); \
+        else \
+                echo 'THE DIRECTORY ALREADY EXISTS'; \
+                echo 'PLEASE CHOOSE AN OTHER NAME' ; \
+        fi
+
+
 run-MB: compile-MB
 	@if [ -d $(new_dir) ]; then \
 		cp ./check_MB_mpi $(new_dir); \
