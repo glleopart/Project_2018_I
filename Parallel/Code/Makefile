@@ -5,7 +5,7 @@ new_dir = $(path)$(dir_name)
 num_procs = 2
 all_exec = compile-main compile-MB compile-rdf
 to_compile = compile-rows_per_proc compile-send_array compile-pbc compile-lj compile-mom compile-init_pos compile-init_vel compile-thermo compile-verlet compile-pos compile-KE compile-read_data compile-print_data compile-distort 
-.PHONY: clean backup run-main run-MB run-rdf variables module-load
+.PHONY: clean backup run-main run-MB run-rdf variables module-load run-main-bsc
 
 compile-all: module-load $(all_exec) 
 
