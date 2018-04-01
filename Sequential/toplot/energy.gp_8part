@@ -1,0 +1,11 @@
+reset
+set xlabel 'time'
+set ylabel 'Energy'
+set title 'Different Energies VS. Time'
+
+plot 	'data.out' using 1:2 with lines title 'Potential Energy',\
+	'data.out' using 1:3 with lines title 'Kinetic Energy',\
+	'data.out' using 1:4 with lines title 'Mechanical Energy'
+
+pause -1
+reset

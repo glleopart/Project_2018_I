@@ -1,0 +1,16 @@
+#!/bin/csh
+#$ -N 'MD_test'
+#$ -o MD.out
+#$ -e MD.err
+#$ -q iqtc02.q
+#$ -S /bin/csh
+#$ -cwd
+#$ -pe smp 1
+
+
+
+
+
+./dynamics input.dat
+
+

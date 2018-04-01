@@ -1,0 +1,10 @@
+reset
+set xlabel 'time'
+set ylabel 'Temperature'
+set title 'Temperature VS. Time'
+unset key
+
+plot 	'data.out' using 1:6 with lines 
+
+pause -1
+reset
