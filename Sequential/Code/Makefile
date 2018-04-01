@@ -1,5 +1,5 @@
 path = $(shell pwd)/../
-dir_name= test_run
+dir_name=test_run
 new_dir = $(path)$(dir_name)
 all_exec = compile-main compile-MB compile-rdf
 .PHONY: clean backup run-main run-MB run-rdf
@@ -112,9 +112,63 @@ run-rdf: compile-rdf
 		echo 'THE DIRECTORY DOES NOT EXIST'; \
 		echo 'PLEASE TARGET A VALID ONE'; \
 	fi
+plot-energy: 
+	if [ -d $(new_dir) ]; then \
+                cd $(new_dir); \
+                gnuplot energy_all.gp; \
+        else \
+                echo 'THE DIRECTORY DOES NOT EXIST'; \
+                echo 'PLEASE TARGET A VALID ONE'; \
+        fi
+
+plot-momentum: 
+	if [ -d $(new_dir) ]; then \
+                cd $(new_dir); \
+                gnuplot momentum_all.gp; \
+        else \
+                echo 'THE DIRECTORY DOES NOT EXIST'; \
+                echo 'PLEASE TARGET A VALID ONE'; \
+        fi
+
+plot-temperature: 
+	if [ -d $(new_dir) ]; then \
+                cd $(new_dir); \
+                gnuplot temperature_all.gp; \
+        else \
+                echo 'THE DIRECTORY DOES NOT EXIST'; \
+                echo 'PLEASE TARGET A VALID ONE'; \
+        fi
 
 
 
+help: 
+	@echo '-------------------------------------------------'
+	@echo Type "make" to compile everything
+	@echo Type "make run-main" to run the MD simulation in ../test_dir and 2 threads by default.
+	@echo '        'To change default values: "make run-main num_procs=# dir_name='your/dir/'"
+	@echo Type "make run-rdf" to run the RDF computation program.
+	@echo Type "make run-MB" to perform the checking the velocity distribution.
+	@echo '        '\(This two commands must be executed AFTER running MD.
+	@echo '        'But the Makefile already have this feature into account.
+	@echo '        'Default options for "run-main" apply to "make run-rdf" and "make run-MB" too.\)
+	@echo Type "make clean" to remove *.o, *.mod, *.xyz, *.out and the exec files.
+	@echo Type "make backup" to create a backup directory with the *.f90 files.
+	@echo Type "make help" to show the aviable options.
+	@echo 
+	@echo Type make plot-energy dir_name=toplot ,in order to plot Potential Energy, press enter to watch kinetic energy, press enter again 
+	@echo to watch mechanical energy . 
+	@echo 
+	@echo 
+	@echo Type : make plot-momentum dir_name=toplot , in order to watch momentum behaviour for i=4,12,2 particles per dimension  
+	@echo 
+	@echo Type : make plot-temperature dir_name=toplot , in order to watch temperature behaviour for i=4,12,2 particles per dimension  
+	@echo 
+	@echo "'dir_name' default is "$(dir_name)
+	@echo 
+	@echo 
+	@echo "'num_procs' default is "$(num_procs)
+	@echo 
+	@echo '-------------------------------------------------'
 
 
 
