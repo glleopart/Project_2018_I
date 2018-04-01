@@ -9,7 +9,7 @@ real(8), intent(in)                             :: dt, eps, sig, boxSize, cutOff
 real(8), intent(inout)                          :: time
 real(8), intent(out)                            :: V
 real(8), dimension(nPart,3), intent(inout)      :: pos, vel, F
-real(4), intent(in)                             :: forcesTotT
+real(4), intent(inout)                             :: forcesTotT
 real(8), dimension(nPart,3)                     :: F_aux
 integer                                         :: i, j, k
 real(8), dimension(3)                           :: vec
@@ -17,10 +17,10 @@ real(4)                                         :: forcesIniT, forcesFinT
 
 !Starting the simulation the forces are obtained calling LJ_pot
 if (time == 0) then
-         if (present(forcesTotT)) call cpu_time(forcesIniT)
+         call cpu_time(forcesIniT)
          call LJ_pot(nPart, pos, eps, sig, boxSize, cutOff, F_aux, V)
-         if (present(forcesTotT)) call cpu_time(forcesFinT)
-         if (present(forcesTotT)) forcesTotT = forcesTotT + (forcesFinT - forcesIniT)
+         call cpu_time(forcesFinT)
+         forcesTotT = forcesTotT + (forcesFinT - forcesIniT)
 end if
 !Once the simulation is running the forces enter as an input value F(t)
 !Also F(t+dt) is the output of the subroutine
@@ -34,10 +34,10 @@ do i = 1, nPart, 1
         pos(i,:) = vec(:)
 end do
 !Calculation of forces at time t+dt
-if (present(forcesTotT)) call cpu_time(forcesIniT)
+call cpu_time(forcesIniT)
 call LJ_pot(nPart, pos, eps, sig, boxSize, cutOff, F, V)
-if (present(forcesTotT)) call cpu_time(forcesFinT)
-if (present(forcesTotT)) forcesTotT = forcesTotT + (forcesFinT - forcesIniT)
+call cpu_time(forcesFinT)
+forcesTotT = forcesTotT + (forcesFinT - forcesIniT)
 
 !calculation of vel(t+dt)
 do i = 1, nPart, 1
