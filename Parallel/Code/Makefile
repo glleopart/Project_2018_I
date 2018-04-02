@@ -5,12 +5,13 @@ new_dir = $(path)$(dir_name)
 num_procs = 2
 all_exec = compile-main compile-MB compile-rdf
 to_compile = compile-rows_per_proc compile-send_array compile-pbc compile-lj compile-mom compile-init_pos compile-init_vel compile-thermo compile-verlet compile-pos compile-KE compile-read_data compile-print_data compile-distort 
-.PHONY: clean backup run-main run-MB run-rdf variables module-load run-main-bsc
+.PHONY: clean backup run-main run-MB run-rdf variables module-load
 
 compile-all: module-load $(all_exec) 
 
 module-load:
-	$(shell module load openmpi/1.6.5_gcc-4.8.3)
+	source $(MODULEPATH)/init/bash \
+	module load openmpi
 
 compile-main: EIA_dynamics_main.f90 $(to_compile)
 	mpif90 -g -o 	dynamics_mpi \
@@ -42,46 +43,46 @@ compile-rdf: compile-rows_per_proc rdf.f90
 			pbc_module.f90
 
 compile-pbc: pbc_module.f90 
-	mpif90 -g -c 	pbc_module.f90
+	mpif90 -c -g	 pbc_module.f90
 
 compile-lj: lj_module.f90
-	mpif90 -g -c 	lj_module.f90
+	mpif90 -c -g 	lj_module.f90
 
 compile-mom: moment_module.f90
-	mpif90 -g -c 	moment_module.f90
+	mpif90 -c -g	moment_module.f90
 
 compile-init_pos: position_module.f90
-	mpif90 -g -c 	position_module.f90
+	mpif90 -c -g 	position_module.f90
 
 compile-init_vel: velocities_module.f90
-	mpif90 -g -c 	velocities_module.f90
+	mpif90 -c -g  	velocities_module.f90
 
 compile-thermo: andersen_therm_module.f90
-	mpif90 -g -c 	andersen_therm_module.f90
+	mpif90 -c -g  	andersen_therm_module.f90
 
 compile-verlet: vel_verlet_module.f90
-	mpif90 -g -c 	vel_verlet_module.f90
+	mpif90 -c -g  	vel_verlet_module.f90
 
 compile-pos: print_positions_module.f90
-	mpif90 -g -c 	print_positions_module.f90
+	mpif90 -c -g  	print_positions_module.f90
 
 compile-KE: kinetic_energy_module.f90
-	mpif90 -g -c 	kinetic_energy_module.f90
+	mpif90 -c -g  	kinetic_energy_module.f90
 
 compile-read_data: read_data_module.f90
-	mpif90 -g -c 	read_data_module.f90
+	mpif90 -c -g  	read_data_module.f90
 
 compile-print_data: print_data_module.f90
-	mpif90 -g -c 	print_data_module.f90
+	mpif90 -c -g  	print_data_module.f90
 
 compile-distort: distort_module.f90
-	mpif90 -g -c 	distort_module.f90
+	mpif90 -c -g  	distort_module.f90
 
 compile-send_array: send_recv_module.f90
-	mpif90 -g -c 	send_recv_module.f90
+	mpif90 -c -g  	send_recv_module.f90
 
 compile-rows_per_proc: rows_per_proc_module.f90
-	mpif90 -g -c 	rows_per_proc_module.f90
+	mpif90 -c -g 	rows_per_proc_module.f90
 
 clean:
 	rm -f *.mod
@@ -116,7 +117,7 @@ run-main-bsc: compile-main
                 cp ./dynamics_mpi $(new_dir); \
 		cp ./sub_bsc.sh $(new_dir); \
                 cd $(new_dir); \
-                bsub sub_bsc.sh $(num_procs); \
+                bsub -W 210 -q training sub_bsc.sh $(num_procs); \
         else \
                 echo 'THE DIRECTORY ALREADY EXISTS'; \
                 echo 'PLEASE CHOOSE AN OTHER NAME' ; \
