@@ -94,7 +94,7 @@ do i = 1, nIt, 1
         end do
 end do
 
-call mpi_reduce(histogram, masterHistogram, (nPart+2), mpi_integer, mpi_sum, rMaster, mpi_comm_world, ierror)
+call mpi_reduce(histogram, masterHistogram, (nRad + 2), mpi_integer, mpi_sum, rMaster, mpi_comm_world, ierror)
 
 !histogram(:) = histogram(:)/(pasR*sum(histogram))
 if (rank == rMaster) then
@@ -109,8 +109,8 @@ if (rank == rMaster) then
         close(un); close(unOut); close(paramUn)
 end if
 call CPU_TIME(finalT)
-time = finalT - iniT
-print *, "CPU_TIME:", time
+temps = finalT - iniT
+print *, "CPU_TIME:", temps
 call mpi_finalize(ierror)
 
 end program rdf
