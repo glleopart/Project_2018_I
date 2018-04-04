@@ -96,6 +96,7 @@ end do
 
 call mpi_reduce(histogram, masterHistogram, (nRad + 2), mpi_real8, mpi_sum, rMaster, mpi_comm_world, ierror)
 
+
 !histogram(:) = histogram(:)/(pasR*sum(histogram))
 if (rank == rMaster) then
         open(unit=unOut, file='rdf.out')
