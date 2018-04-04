@@ -21,7 +21,6 @@ call mpi_init(ierror)
 call mpi_comm_rank(mpi_comm_world, rank, ierror)
 call mpi_comm_size(mpi_comm_world, numProcs, ierror)
 
-if (rank == rMaster) then
         call get_command_argument(1, fName, status=fStat)
         if (fStat /= 0) then
                 print*, 'Any file given ---> Exitting program'
@@ -40,7 +39,6 @@ if (rank == rMaster) then
         open(unit=paramUn, file=trim(fName), status='old')
         read(paramUn,*) nIt, nPart
 
-end if
 
 
 iniHist = -15.0D0; finHist = 15.0D0; nHist = 3000
@@ -54,6 +52,7 @@ call rows_per_proc(nPart, myFirstPart, myLastPart)
 histogram(:) = 0
 masterHistogram(:) = 0
 do i = 1, nIt, 1
+        print *, i
         read(un,*) nPart
         read(un,*) trash
         do j = 1, nPart, 1
@@ -79,9 +78,9 @@ do i = 1, nIt, 1
                         histogram(nHist+2) = histogram(nHist+2) + 1
                 end if
         end do; end do
-end do
+        end do
 
-call mpi_reduce(histogram, masterHistogram, (nPart + 2), mpi_real8, mpi_sum, rMaster, mpi_comm_world, ierror)
+call mpi_reduce(histogram, masterHistogram, (nHist + 2), mpi_real8, mpi_sum, rMaster, mpi_comm_world, ierror)
 
 if (rank == rMaster) then
         ! NORMALITZACIÓ
