@@ -12,6 +12,7 @@ real(8), allocatable, dimension(:)      :: histogram, masterHistogram
 real(8), dimension(3)                   :: vec
 real(8)                                 :: iniHist, finHist, pasH, modV
 real(8)                                 :: minVel, minVel2
+real(8)                                 :: iniT, finalT, temps
 !Variables MPI
 integer                                 :: ierror, rank, numProcs, status, numParts, myFirstPart, myLastPart
 integer, parameter                      :: rMaster = 0
@@ -29,7 +30,7 @@ if (rank == rMaster) then
         end if
         un = 100; unOut = 101
         open(unit=un, file=trim(fName), status='old')
-
+        call cpu_time(iniT)
         call get_command_argument(2, fName, status=fStat)
         if (fStat /= 0) then
                 print*, 'Any file given ---> Exitting program'
@@ -88,9 +89,12 @@ if (rank == rMaster) then
 
         open(unit=unOut, file='MB_velocityDistribution.out')
         do i = 1, nHist + 2, 1
-                write(unOut,*) iniHist + (i-1)*pasH, histogram(i)
+                write(unOut,*) iniHist + (i-1)*pasH, masterHistogram(i)
         end do
         close(un); close(unOut); close(paramUn)
+        call cpu_time(finalT)
+        temps = finalT - iniT
+        print *, "CPU_TIME:", temps
 end if
 
 call mpi_finalize(ierror)

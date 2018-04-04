@@ -22,7 +22,6 @@ integer, parameter                      :: rMaster = 0
 call mpi_init(ierror)
 call mpi_comm_rank(mpi_comm_world, rank, ierror)
 call mpi_comm_size(mpi_comm_world, numProcs, ierror)
-call CPU_TIME(iniT)
 call get_command_argument(1, fName, status=fStat)
 if (fStat /= 0) then
         print*, 'Any file given ---> Exitting program'
@@ -34,6 +33,7 @@ un = 100; unOut = 101
 open(unit=un, file=trim(fName), status='old')
 
 if (rank == rMaster) then
+        call cpu_time(iniT)
         call get_command_argument(2, fName, status= fStat)
         if (fStat /= 0) then
                 print*, 'Size of the box needed ---> Exitting program'
@@ -107,10 +107,12 @@ if (rank == rMaster) then
                 minRad = minRad + pasR
         end do
         close(un); close(unOut); close(paramUn)
+        
+        call CPU_TIME(finalT)
+        temps = finalT - iniT
+        print *, "CPU_TIME:", temps
 end if
-call CPU_TIME(finalT)
-temps = finalT - iniT
-print *, "CPU_TIME:", temps
+
 call mpi_finalize(ierror)
 
 end program rdf
