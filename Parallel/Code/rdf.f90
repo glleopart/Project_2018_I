@@ -14,6 +14,7 @@ real(8), allocatable, dimension(:)      :: histogram, masterHistogram
 real(8), dimension(3)                   :: vec, tar
 real(8)                                 :: iniRad, finRad, pasR, modV
 real(8)                                 :: minRad, minRad2, factor
+real(8)                                 :: iniT, finalT, temps
 !Variables MPI
 integer                                 :: ierror, rank, numProcs, status, numParts, myFirstPart, myLastPart
 integer, parameter                      :: rMaster = 0
@@ -21,7 +22,7 @@ integer, parameter                      :: rMaster = 0
 call mpi_init(ierror)
 call mpi_comm_rank(mpi_comm_world, rank, ierror)
 call mpi_comm_size(mpi_comm_world, numProcs, ierror)
-
+call CPU_TIME(iniT)
 call get_command_argument(1, fName, status=fStat)
 if (fStat /= 0) then
         print*, 'Any file given ---> Exitting program'
@@ -107,6 +108,9 @@ if (rank == rMaster) then
         end do
         close(un); close(unOut); close(paramUn)
 end if
+call CPU_TIME(finalT)
+time = finalT - iniT
+print *, "CPU_TIME:", time
 call mpi_finalize(ierror)
 
 end program rdf
