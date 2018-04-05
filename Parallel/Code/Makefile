@@ -128,7 +128,7 @@ run-MB: compile-MB
 	@if [ -d $(new_dir) ]; then \
 		cp ./check_MB_mpi $(new_dir); \
 		cd $(new_dir); \
-		mpirun -np $(num_procs) check_MB_mpi velocity.out parameters.out
+		mpirun -np $(num_procs) check_MB_mpi velocity.out parameters.out; \
 	else \
 		echo 'THE DIRECTORY DOES NOT EXIST'; \
 		echo 'PLEASE TARGET A VALID ONE'; \
